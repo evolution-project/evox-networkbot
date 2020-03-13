@@ -188,18 +188,48 @@ bot.on('message', (user, userID, channelID, message, evt) => {
                 to: channelID,
                 message: 
                         '\`\`\`.diff       :   Displays current difficulty.\n' +
+                               '.status     :   Displays network information.\n' +
                                '.hash       :   Displays current network hashrate.\n' +
                                '.block      :   Displays current block height.\n' +
-                               '.help       :   Displays this menu.\n' +
-                               '.network    :   Displays network information.\n' +
-                               '.hardfork   :   Displays hardfork information.\n' +
-                               '- More commands soon.\`\`\`'
+                               '.pools      :   Displays list of pools.\n' +
+                               '.links      :   Displays usefull links.\n' +
+                               '.hardfork   :   Displays hardfork information.\n' + 
+                               '.help       :   Displays this menu.\`\`\`'
 
             });
         }
 
+        // pools command
+        if (cmd === 'pools') {
+            console.log('** Pools link sent');
+            bot.sendMessage({
+                to: channelID,
+                message:
+                        '\`\`\`Evolution Mining Pools Link\`\`\`\n' + 
+                        'https://miningpoolstats.stream/evolution \n'            
+            });
+        }
+
+        // links command
+        if (cmd === 'links') {
+            console.log('** Link sent');
+            bot.sendMessage({
+                to: channelID,
+                message:
+                        '\`\`\`BlockChain Explorer\`\`\`\n' + 
+                        'https://explorer.evolutionproject.space \n' +
+                        '\`\`\`Evolution Main Site\`\`\`\n' +     
+                        'https://explorer.evolutionproject.space \n' +
+                        '\`\`\`Offline Web Wallet\`\`\`\n' +    
+                        'https://wallet.evolutionproject.space \n' +
+                        '\`\`\`Electron Wallet\`\`\`\n' +    
+                        'https://github.com/evolution-project/evolution-electron-wallet/releases/latest \n'
+            });
+        }
+        
+
         // network command
-        if (cmd === 'network') {
+        if (cmd === 'status') {
             // check that none of the variables are undefined
             if (Globals.networkInfo === undefined) {
                 console.log('** Undefined network info requested');
@@ -243,6 +273,8 @@ bot.on('message', (user, userID, channelID, message, evt) => {
             }
         }
 
+
+                    
         // network command
         if (cmd === 'hardfork') {
             // check that none of the variables are undefined
