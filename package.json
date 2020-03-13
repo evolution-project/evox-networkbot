@@ -1,0 +1,32 @@
+{
+  "name": "hashbot",
+  "version": "0.1.0",
+  "description": "Market Talk Bot for TurtleCoin",
+  "main": "bot.js",
+  "author": "ExtraHash",
+  "dependencies": {
+    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lcxnetwork/HashBot.git"
+  },
+  "keywords": [
+    "market",
+    "talk",
+    "turtlecoin",
+    "trtl",
+    "cryptocurrency"
+  ],
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/lcxnetwork/HashBot/issues"
+  },
+  "homepage": "https://github.com/lcxnetwork/HashBot#readme"
+}
