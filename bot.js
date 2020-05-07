@@ -3,6 +3,7 @@ const discord = require('discord.io');
 const wallet = require('evox-nodejs')
 const request = require('request-promise');
 const auth = require('./auth.json');
+//const client = new discord.Client(); // this uses the discord.js package to setup a client
 var fs = require("fs");
 const marketID = '648609336796512269'; //channel id for welcome message 648609336796512269
 var log1 = true;
@@ -10,7 +11,8 @@ var log1 = true;
 const Globals = {
     networkInfo: undefined,
     bitcoinInfo: undefined,
-    arqmaInfo: undefined,
+//    arqmaInfo: undefined,
+//    evolutionInfo: undefined,
     blockInfo: undefined,
     balanceInfo: undefined,
     coingeckoInfo: undefined,
@@ -22,6 +24,18 @@ const bot = new discord.Client({
     token: auth.token,
     autorun: true
 });
+
+const client = new discord.Client(); // this uses the discord.js package to setup a client
+
+//});
+
+// Added by me, first create object containing the serverStats info
+const serverStats = {
+	guildID: '648609336796512269',
+	totalUsersID: '648609336796512269',
+	memberCountID: '648609336796512269',
+	botCountID: '648609336796512269'
+};
 
 // function to format numbers with commas like currency
 function numberWithCommas(x) {
@@ -42,19 +56,43 @@ async function update() {
     } else {
         console.log('** Got undefined bitcoin price data from coingecko');
     }
-    let arqmaQuery = (await getData('https://api.coingecko.com/api/v3/coins/markets?vs_currency=btc&ids=arqma&order=market_cap_desc&per_page=100&page=1&sparkline=false', 'geckoARQInfo'))[0];
-    if (arqmaQuery !== undefined) {
-        Globals.arqmaInfo = arqmaQuery;
-    } else {
-        console.log('** Got undefined ArQmA price data from coingecko');
-    }
-    let blockQuery = await getData('https://evox.supportcryptonight.com/api/networkinfo', 'blockQuery');
+
+
+
+
+//    let arqmaQuery = (await getData('https://api.coingecko.com/api/v3/coins/markets?vs_currency=btc&ids=arqma&order=market_cap_desc&per_page=100&page=1&sparkline=false', 'geckoARQInfo'))[0];
+//    if (arqmaQuery !== undefined) {
+//        Globals.arqmaInfo = arqmaQuery;
+//    } else {
+//        console.log('** Got undefined ArQmA price data from coingecko');
+//    }
+
+
+
+
+	// EVOX price
+
+//     let evolutionQuery = (await getData('https://cratex.io/api/v1/get_markets_json.php?market=EVOX/BTC','cratexEVOXInfo'))[0];
+//	 if (evolutionQuery !==undefined) {
+//        Globals.evolutionInfo = evolutionQuery;
+//	} else {
+//        console.log('** Got undefined Evolution price date from cratex');
+//	}		
+
+
+
+
+
+
+
+
+    let blockQuery = await getData('http://explorer.evolutionproject.space/api/networkinfo', 'blockQuery');
     if (blockQuery !== undefined) {
         Globals.blockInfo = blockQuery;
     } else {
         console.log('** Got undefined blocks data from explorer');
     }
-    let emissionQuery = await getData('https://evox.supportcryptonight.com/api/emission', 'emissionQuery');
+    let emissionQuery = await getData('http://explorer.evolutionproject.space/api/emission', 'emissionQuery');
     if (emissionQuery !== undefined) {
         Globals.emissionInfo = emissionQuery;
     } else {
@@ -80,6 +118,32 @@ bot.on('ready', (evt) => {
     bot.setPresence( {game: {name:"Network Stats"}} );
 });
 
+// This will run 
+client.on('ready', () => console.log('Launched!'));
+
+// Added by me, Next create 2 listener events, one for members leaving the serv one for members that join serv
+client.on('guildMemberAdd', member => {
+
+	// we also want to return if the members guild isnt the same as the one with serverStats
+	if (member.guild.id !== serverStats.guildID) return;
+	
+	// Now we want to update the voiceChannel names
+	client.channels.get(serverStats.totalUsersID).setName(`Total Users : ${member.guild.memberCount}`); // Total Users
+	client.channels.get(serverStats.memberCountID).setName(`Member Count : ${member.guild.members.filter(m => !m.user.bot).size}`); // Total Members (not included bots)
+        client.channels.get(serverStats.botCountID).setName(`Bot Count : ${member.guild.members.filter(m => m.user.bot).size}`); // Total Bots
+});
+
+client.on('guildMemberRemove', member => {
+
+	if (member.guild.id !== serverStats.guildID) return;
+
+	// We also want the same thing to happen when a mamber leave the guild
+        client.channels.get(serverStats.totalUsersID).setName(`Total Users : ${member.guild.memberCount}`); // Total Users
+        client.channels.get(serverStats.memberCountID).setName(`Member Count : ${member.guild.members.filter(m => !m.user.bot).size}`); // Total Members (not included bots)
+        client.channels.get(serverStats.botCountID).setName(`Bot Count : ${member.guild.members.filter(m => m.user.bot).size}`); // Total Bots
+
+});
+
 // error logging
 bot.on('error', console.error);
 
@@ -99,7 +163,7 @@ bot.on('guildMemberAdd', (member) => {
         `Info about project https://evolutionproject.space.\n` +
         `Github https://github.com/evolution-project\n` +
         `Pool list https://miningpoolstats.stream/evolution\n` +
-        `In case of any issues or questions ping <@ArtFix [EvoX Dev]>`
+        `In case of any issues or questions ping @ArtFix | EvoX Dev`
     });
 });
 
@@ -109,6 +173,66 @@ bot.on('message', (user, userID, channelID, message, evt) => {
     // It will listen for messages that will start with `.`
     if (message[0] === '.') {
         const [cmd, args] = message.substring(1).split(' ');
+
+
+
+    // added by me
+
+	if (cmd ==='btc') {
+            // check that none of the variables are undefined
+	   if (Globals.networkInfo.network.difficulty === undefined) {
+                console.log('** Undefined difficulty requested');
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'Whoops! I\'m still gathering data for you, please try again later. 😄'
+                });
+            } else {
+                console.log('** Current BTC price sent');
+	 	bot.sendMessage({
+		    to: channelID,
+		    message: `BTC: $${numberWithCommas(Globals.bitcoinInfo.current_price.toFixed(2))} \n `
+		});
+		bot.addReaction({
+                              channelID: channelID,
+                              messageID: evt.d.id,
+                reaction: '☑'
+              });
+            }
+        } 
+
+
+
+    // added by me
+
+	if (cmd ==='evox') {
+            // check that none of the variables are undefined
+	   if (Globals.networkInfo.network.difficulty === undefined) {
+                console.log('** Undefined difficulty requested');
+                bot.sendMessage({
+                    to: channelID,
+                    message: 'Whoops! I\'m still gathering data for you, please try again later. 😄'
+                });
+            } else {
+                console.log('** Current BTC price sent');
+	 	bot.sendMessage({
+		    to: channelID,
+		    message: `EVOX: $${numberWithCommas(Globals.evoxInfo.current_price.toFixed(2))} \n `
+		});
+		bot.addReaction({
+                              channelID: channelID,
+                              messageID: evt.d.id,
+                reaction: '☑'
+              });
+            }
+        }
+
+
+
+
+
+
+
+
 
         // difficulty command
         if (cmd === 'diff') {
@@ -193,7 +317,9 @@ bot.on('message', (user, userID, channelID, message, evt) => {
                                '.block      :   Displays current block height.\n' +
                                '.pools      :   Displays list of pools.\n' +
                                '.links      :   Displays usefull links.\n' +
-                               '.hardfork   :   Displays hardfork information.\n' + 
+                               '.hardfork   :   Displays hardfork information.\n' +
+			       '.btc	    :   Display the current price of BTC.\n' +
+			       '.exchange   :   Display the exchange BTC-EVOX site. \n' +
                                '.help       :   Displays this menu.\`\`\`'
 
             });
@@ -205,8 +331,8 @@ bot.on('message', (user, userID, channelID, message, evt) => {
             bot.sendMessage({
                 to: channelID,
                 message:
-                        '\`\`\`Evolution Mining Pools Link\`\`\`\n' + 
-                        'https://miningpoolstats.stream/evolution \n'            
+                        '\`\`\`Evolution Mining Pools Link\`\`\`\n' +
+                        'https://miningpoolstats.stream/evolution \n'
             });
         }
 
@@ -216,17 +342,30 @@ bot.on('message', (user, userID, channelID, message, evt) => {
             bot.sendMessage({
                 to: channelID,
                 message:
-                        '\`\`\`BlockChain Explorer\`\`\`\n' + 
-                        'https://explorer.evolutionproject.space \n' +
-                        '\`\`\`Evolution Main Site\`\`\`\n' +     
-                        'https://explorer.evolutionproject.space \n' +
-                        '\`\`\`Offline Web Wallet\`\`\`\n' +    
-                        'https://wallet.evolutionproject.space \n' +
-                        '\`\`\`Electron Wallet\`\`\`\n' +    
-                        'https://github.com/evolution-project/evolution-electron-wallet/releases/latest \n'
+                        ' BlockChain Explorer \n' +
+                        ' https://explorer.evolutionproject.space \n' +
+                        ' Evolution Main Site \n' +
+                        ' https://evolutionproject.space \n' +
+                        ' Offline Web Wallet \n' +
+                        ' https://wallet.evolutionproject.space \n' +
+                        ' Electron Wallet \n' +
+                        ' https://github.com/evolution-project/evolution-electron-wallet/releases/latest \n'
             });
         }
-        
+
+
+
+        // exchange command
+        if (cmd === 'exchange') {
+            console.log('** Link sent');
+            bot.sendMessage({
+                to: channelID,
+                message:
+                        ' CrateX Exchange \n' +
+                        ' https://cratex.io/index.php?pair=EVOX/BTC \n'
+            });
+        }
+ 
 
         // network command
         if (cmd === 'status') {
@@ -244,8 +383,8 @@ bot.on('message', (user, userID, channelID, message, evt) => {
                     embed: {
                         color: 1000798,
                         thumbnail: {
-                            url: 'https://raw.githubusercontent.com/evolution-project/graphics/master/evox-120x120.png',
-                        },
+                            url: 'https://raw.githubusercontent.com/evolution-project/graphics/master/64x64.png',
+                       },
                         fields: [{
                                 name: 'Network Stats',
                                 value: `Network Hashrate: **${numberWithCommas(((Globals.networkInfo.network.difficulty / 120) / 1000 / 1000).toFixed(2))} MH/s**\n` +
@@ -304,7 +443,8 @@ bot.on('message', (user, userID, channelID, message, evt) => {
                         ],
                         footer: {
                             text: `BTC: $${numberWithCommas(Globals.bitcoinInfo.current_price.toFixed(2))} \n `
-                            //text: `ArQmA Network \n BTC: $${numberWithCommas(Globals.bitcoinInfo.current_price.toFixed(2))} \n ARQ: ${numberWithCommas(Globals.arqmaInfo.current_price.toFixed(8))} sat `
+                        //  text: `ArQmA Network \n BTC: $${numberWithCommas(Globals.bitcoinInfo.current_price.toFixed(2))} \n ARQ: ${numberWithCommas(Globals.arqmaInfo.current_price.toFixed(8))} sat `
+                        //  text: `Evolition Network \n BTC: $${numberWithCommas(Globals.bitcoinInfo.current_price.toFixed(2))} \n EVOX: ${numberWithCommas(Globals.evolutionInfo.current_price.toFixed(8))} sat `
                         }
                     }
                 });
